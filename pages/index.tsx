@@ -1,45 +1,79 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+);
 
 export default function Home() {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [ok, setOk] = useState<null | string>(null);
+  const [err, setErr] = useState<string>("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("New signup:", email); // later connect to Supabase
-    setSubmitted(true);
+    setErr("");
+    const { error } = await supabase.from("waitlist").insert([{ email }]);
+    if (error) setErr(error.message);
+    else {
+      setOk("Thanks for joining! ✅");
+      setEmail("");
+    }
   };
 
   return (
-    <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb" }}>
-      <div style={{ maxWidth: "600px", textAlign: "center" }}>
-        <h1 style={{ fontSize: "2.5rem", fontWeight: "bold", marginBottom: "1rem" }}>
-          Browse9ja.ng
-        </h1>
-        <p style={{ fontSize: "1.1rem", color: "#555", marginBottom: "1.5rem" }}>
-          Nigeria’s trusted business directory and reviews platform. <br />
-          Starting in Abuja, scaling nationwide 🚀
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#f5f5f5",
+        padding: 16,
+      }}
+    >
+      <div style={{ width: "100%", maxWidth: 600, textAlign: "center" }}>
+        <h1 style={{ fontSize: 32, margin: 0, fontWeight: 800 }}>Browse9ja.ng</h1>
+        <p style={{ color: "#555", margin: "12px 0 20px" }}>
+          Nigeria’s trusted business directory and reviews platform 🚀
         </p>
 
-        {!submitted ? (
-          <form onSubmit={handleSubmit} style={{ display: "flex", gap: "0.5rem", justifyContent: "center", flexWrap: "wrap" }}>
-            <input
-              type="email"
-              required
-              placeholder="Enter your email to join waitlist"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{ padding: "0.5rem", borderRadius: "5px", border: "1px solid #ccc", flex: "1" }}
-            />
-            <button type="submit" style={{ padding: "0.5rem 1rem", borderRadius: "5px", background: "black", color: "white", fontWeight: "600", cursor: "pointer" }}>
-              Join Waitlist
-            </button>
-          </form>
-        ) : (
-          <p style={{ color: "green", fontWeight: "600", marginTop: "1rem" }}>
-            ✅ Thanks for joining! We’ll keep you posted.
-          </p>
-        )}
+        <form onSubmit={submit} style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+          <input
+            type="email"
+            required
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{
+              flex: 1,
+              minWidth: 220,
+              padding: "10px 12px",
+              border: "1px solid #ccc",
+              borderRadius: 6,
+              fontSize: 16,
+              background: "#fff",
+            }}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: "10px 16px",
+              borderRadius: 6,
+              border: "none",
+              background: "#000",
+              color: "#fff",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Join Waitlist
+          </button>
+        </form>
+
+        {ok && <p style={{ color: "green", marginTop: 12 }}>{ok}</p>}
+        {err && <p style={{ color: "crimson", marginTop: 12 }}>⚠️ {err}</p>}
       </div>
     </main>
   );
