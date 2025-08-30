@@ -1,19 +1,26 @@
 import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-);
-
 export default function Home() {
   const [email, setEmail] = useState("");
   const [ok, setOk] = useState<null | string>(null);
-  const [err, setErr] = useState<string>("");
+  const [err, setErr] = useState("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
+
+    // Create the client only in the browser (no build-time usage)
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+
+    if (!url || !key) {
+      setErr("Supabase keys are missing in the environment.");
+      return;
+    }
+
+    const supabase = createClient(url, key);
+
     const { error } = await supabase.from("waitlist").insert([{ email }]);
     if (error) setErr(error.message);
     else {
